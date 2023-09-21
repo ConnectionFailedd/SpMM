@@ -1,10 +1,11 @@
 #include "matrix.hpp"
 
+#include <fstream>
 #include <iostream>
 #include <vector>
 
 int main() {
-    auto csr = CSRMatrix<int>(3, 2, {{1, 0, 0}, {2, 1, 1}, {3, 2, 0}});
+    auto csr = CSRMatrix<int>(3, 2, {{1, 0, 0}, {2, 2, 1}, {3, 2, 0}, {4, 3, 0}});
     std::cout << "CSR: matrix" << std::endl;
     std::cout << csr << std::endl;
 
@@ -15,5 +16,6 @@ int main() {
     auto res = csr * dense;
 
     std::cout << "Result:" << std::endl;
-    std::cout << res << std::endl;;
+    std::cout << res << std::endl;
+    std::ofstream a;
 }
