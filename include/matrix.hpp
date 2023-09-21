@@ -31,27 +31,27 @@ public:
     }
     DenseMatrix<__Tp>(DenseMatrix<__Tp> && _denseMatrix) noexcept : __rows(_denseMatrix.__rows), __columns(_denseMatrix.__columns), __matrix(std::move(_denseMatrix.__matrix)) {}
 
-    friend std::ostream & operator<<(std::ostream & _ost, const DenseMatrix<__Tp> & _matrix) {
-        // print to command line
-        for(auto i = 0; i < _matrix.__rows; i++) {
-            for(auto j = 0; j < _matrix.__columns; j++) {
-                _ost << _matrix.__matrix[i][j] << "\t";
-            }
-            _ost << std::endl;
-        }
-        return _ost;
-    }
+    // friend std::ostream & operator<<(std::ostream & _ost, const DenseMatrix<__Tp> & _matrix) {
+    //     // print to command line
+    //     for(auto i = 0; i < _matrix.__rows; i++) {
+    //         for(auto j = 0; j < _matrix.__columns; j++) {
+    //             _ost << _matrix.__matrix[i][j] << "\t";
+    //         }
+    //         _ost << std::endl;
+    //     }
+    //     return _ost;
+    // }
 
-    friend std::ifstream & operator>>(std::ifstream & _ifs, DenseMatrix<__Tp> & _matrix) {
-        // load from file
-        alignas(std::max_align_t) char buffer[sizeof(std::max_align_t)];
-        _ifs.read(buffer, sizeof(std::size_t));
-        _matrix.__rows = *(int *)buffer;
-        _ifs.read(buffer, sizeof(std::size_t));
-    }
-    friend std::ofstream & operator<<(std::ofstream & _ofs, const DenseMatrix<__Tp> & _matrix) {
-        // save to file
-    }
+    // friend std::ifstream & operator>>(std::ifstream & _ifs, DenseMatrix<__Tp> & _matrix) {
+    //     // load from file
+    //     alignas(std::max_align_t) char buffer[sizeof(std::max_align_t)];
+    //     _ifs.read(buffer, sizeof(std::size_t));
+    //     _matrix.__rows = *(int *)buffer;
+    //     _ifs.read(buffer, sizeof(std::size_t));
+    // }
+    // friend std::ofstream & operator<<(std::ofstream & _ofs, const DenseMatrix<__Tp> & _matrix) {
+    //     // save to file
+    // }
 };
 
 template<class __Tp>
@@ -107,26 +107,26 @@ public:
         return res;
     }
 
-    friend std::ostream & operator<<(std::ostream & _ost, const CSRMatrix<__Tp> & _matrix) {
-        for(auto row = 0; row < _matrix.__rows; row++) {
-            auto rowBegin = _matrix.__rowPtr[row], rowEnd = _matrix.__rowPtr[row + 1];
-            auto rowValues = std::vector<__Tp>(_matrix.__columns, __Tp());
-            for(auto ptr = rowBegin; ptr < rowEnd; ptr++) {
-                auto column = _matrix.__columnIndex[ptr];
-                auto value = _matrix.__values[ptr];
-                rowValues[column] = value;
-            }
-            for(auto column = 0; column < _matrix.__columns; column++) {
-                _ost << rowValues[column] << "\t";
-            }
-            _ost << std::endl;
-        }
-        return _ost;
-    }
+    // friend std::ostream & operator<<(std::ostream & _ost, const CSRMatrix<__Tp> & _matrix) {
+    //     for(auto row = 0; row < _matrix.__rows; row++) {
+    //         auto rowBegin = _matrix.__rowPtr[row], rowEnd = _matrix.__rowPtr[row + 1];
+    //         auto rowValues = std::vector<__Tp>(_matrix.__columns, __Tp());
+    //         for(auto ptr = rowBegin; ptr < rowEnd; ptr++) {
+    //             auto column = _matrix.__columnIndex[ptr];
+    //             auto value = _matrix.__values[ptr];
+    //             rowValues[column] = value;
+    //         }
+    //         for(auto column = 0; column < _matrix.__columns; column++) {
+    //             _ost << rowValues[column] << "\t";
+    //         }
+    //         _ost << std::endl;
+    //     }
+    //     return _ost;
+    // }
 
-    friend std::ifstream & operator>>(std::ifstream & _ist, CSRMatrix<__Tp> & _matrix) {
-        // load from file
-    }
+    // friend std::ifstream & operator>>(std::ifstream & _ist, CSRMatrix<__Tp> & _matrix) {
+    //     // load from file
+    // }
 };
 
 #endif
