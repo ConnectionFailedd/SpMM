@@ -68,6 +68,8 @@ public:
     }
 
     // multiplication of CSR matrix and dense matrix
+    // assume the scale of CSR matrix is m, the scale of dense matrix is n * p
+    // the time complexity is O(m * p)
     DenseMatrix<__Tp> operator*(const DenseMatrix<__Tp> & _rhs) const {
         if(this->__columns != _rhs.__rows) throw "Invalid operands!";
 

@@ -7,9 +7,6 @@ enable_testing()
 add_executable(SPMM main.cpp)
 
 include_directories(include)
-add_subdirectory(matrix)
-
-target_link_libraries(SPMM MATRIX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
