@@ -20,11 +20,11 @@ if __name__ == '__main__':
     subprocess.call("mkdir -p {}".format(directory), shell=True)
 
     with open(directory + '/dense', 'bw') as ofile:
-        ofile.write(size.to_bytes(8))
-        ofile.write(size.to_bytes(8))
+        ofile.write(size.to_bytes(8, byteorder='little'))
+        ofile.write(size.to_bytes(8, byteorder='little'))
         for i in range(0, size):
             for j in range(0, size):
-                ofile.write(random.randint(0, 1 << 32 - 1).to_bytes(4))
+                ofile.write(random.randint(0, 1 << 32 - 1).to_bytes(4, byteorder='little'))
 
     with open(directory + '/csr', 'bw') as ofile:
         coo = list[tuple[int, int, int]]()
@@ -32,11 +32,11 @@ if __name__ == '__main__':
             for j in range(0, size):
                 if(random.random() < density):
                     coo.append((random.randint(0, 1 << 32 - 1), i, j))
-        ofile.write(size.to_bytes(8))
-        ofile.write(size.to_bytes(8))
-        ofile.write(len(coo).to_bytes(8))
+        ofile.write(size.to_bytes(8, byteorder='little'))
+        ofile.write(size.to_bytes(8, byteorder='little'))
+        ofile.write(len(coo).to_bytes(8, byteorder='little'))
         coo.sort(key = lambda x: x[1])
         for entry in coo:
-            ofile.write(entry[0].to_bytes(4))
-            ofile.write(entry[1].to_bytes(4))
-            ofile.write(entry[2].to_bytes(4))
+            ofile.write(entry[0].to_bytes(4, byteorder='little'))
+            ofile.write(entry[1].to_bytes(4, byteorder='little'))
+            ofile.write(entry[2].to_bytes(4, byteorder='little'))
