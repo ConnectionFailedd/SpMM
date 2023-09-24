@@ -1,22 +1,51 @@
 #include "matrix.hpp"
 
+#include <chrono>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <string>
 
-int main() {
-    auto csr = CSRMatrix<double>(3, 3, {{1, 0, 0}, {2, 1, 1}, {3, 1, 0}, {4, 3, 0}});
-    // std::ifstream("testcase/csr", std::ios::binary | std::ios::in) >> csr;
-    std::cout << "CSR: matrix" << std::endl;
-    std::cout << csr << std::endl;
+int main(int argc, char ** argv) {
+    auto testcaseNum = std::size_t(128);
 
-    auto dense = DenseMatrix<double>(3, 3, {{1, 2, 3, 4}, {5, 6}});
-    // std::ifstream("testcase/dense", std::ios::binary | std::ios::in) >> dense;
-    // std::ofstream("testcase/dense1", std::ios::binary | std::ios::out) << dense;
-    std::cout << "Dense matrix:" << std::endl;
-    std::cout << dense << std::endl;
+    // parse arguments
+    if(argc == 1) {
+        std::cout << "Executing with default arguments:   -N " << testcaseNum << std::endl;
+    }
+    for(auto index = std::size_t(1); index < argc; index++) {
+        if(argv[index] == std::string("-N") || argv[index] == std::string("--number")) {
+            testcaseNum = std::stoul(argv[index + 1]);
+            index++;
+        }
+        else {
+            std::cout << "Sparse-dense matrix multiplication." << std::endl;
+            std::cout << "Usage: SPMM [-N <testcase-number>]" << std::endl;
+            std::cout << "Arguments:" << std::endl;
+            std::cout << "    -N, --number        the number of testcases for testing." << std::endl;
+        }
+    }
 
-    auto res = csr * dense;
+    auto csr = CSRMatrix<double>();
+    auto dense = DenseMatrix<double>();
+    auto res = DenseMatrix<double>();
 
-    std::cout << "Result:" << std::endl;
-    std::cout << res << std::endl;
+    system("mkdir -p testcases/my_res");
+    auto timeRecorder = std::ofstream("testcases/my_res/_time", std::ios::out | std::ios::trunc);
+    for(auto index = 0; index < testcaseNum; index++) {
+        std::ifstream("testcases/sparse/sparse" + std::to_string(index), std::ios::in | std::ios::binary) >> csr;
+        std::ifstream("testcases/dense/dense" + std::to_string(index), std::ios::in | std::ios::binary) >> dense;
+
+        // start timing
+        auto start = std::chrono::high_resolution_clock::now();
+
+        // multiplication
+        res = csr * dense;
+
+        // end timing
+        auto end = std::chrono::high_resolution_clock::now();
+        timeRecorder << std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() << std::endl;
+
+        std::ofstream("testcases/my_res/res" + std::to_string(index), std::ios::out | std::ios::binary) << res; 
+    }
 }

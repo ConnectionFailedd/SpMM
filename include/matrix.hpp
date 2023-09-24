@@ -140,7 +140,7 @@ public:
         if(__lineNum * __lineCapacity > __capacity) {
             delete __basePtr;
             __capacity = __lineNum * __lineCapacity;
-            __basePtr = operator new(__capacity, ALIGN_CACHE_LINE);
+            __basePtr = (__Tp *)operator new(__capacity, ALIGN_CACHE_LINE);
         }
     }
 
@@ -151,6 +151,18 @@ public:
     inline Line operator[](std::size_t _index) {
         if(_index >= __lineNum) throw std::out_of_range("Subscription of matrix out of range.");
         return Line(__columnNum, (__Tp *)((char *)__basePtr + _index * __lineCapacity));
+    }
+
+    inline DenseMatrix<__Tp> & operator=(DenseMatrix<__Tp> && _rhs) noexcept {
+        __lineNum = _rhs.__lineNum;
+        __columnNum = _rhs.__columnNum;
+        __lineCapacity = _rhs.__lineCapacity;
+        __capacity = _rhs.__capacity;
+        __basePtr = _rhs.__basePtr;
+
+        _rhs.__basePtr = nullptr;
+
+        return *this;
     }
 };
 
@@ -190,6 +202,7 @@ private:
     std::vector<std::size_t> __linePtrs;
 
 public:
+    inline CSRMatrix<__Tp>() : CSRMatrix<__Tp>(0, 0) {}
     inline CSRMatrix<__Tp>(std::size_t _lineNum, std::size_t _columnNum) : __lineNum(_lineNum), __columnNum(_columnNum), __values(), __columnIndexes(), __linePtrs(std::vector<std::size_t>(2, 0)) {}
     CSRMatrix<__Tp>(std::size_t _lineNum, std::size_t _columnNum, std::initializer_list<std::tuple<__Tp, std::size_t, std::size_t>> && _il) : __lineNum(_lineNum), __columnNum(_columnNum), __values(), __columnIndexes(), __linePtrs(std::vector<std::size_t>(2, 0)) {
         // initializer list is COO matrix
