@@ -9,7 +9,7 @@
 
 int main(int argc, char ** argv) {
     auto testcaseNum = std::size_t(128);
-    omp_set_num_threads(8);
+    omp_set_num_threads(2);
 
     // parse arguments
     if(argc == 1) {
@@ -34,7 +34,7 @@ int main(int argc, char ** argv) {
     auto res = DenseMatrix<double>();
 
     system("mkdir -p testcases/my_res");
-    auto timeRecorder = std::ofstream("testcases/my_res/_time", std::ios::out | std::ios::trunc);
+    auto timeRecorder = std::ofstream("testcases/my_res/__time", std::ios::out | std::ios::trunc);
     for(auto index = 0; index < testcaseNum; index++) {
         std::ifstream("testcases/sparse/sparse" + std::to_string(index), std::ios::in | std::ios::binary) >> csr;
         std::ifstream("testcases/dense/dense" + std::to_string(index), std::ios::in | std::ios::binary) >> dense;

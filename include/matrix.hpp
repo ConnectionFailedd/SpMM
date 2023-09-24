@@ -77,6 +77,7 @@ public:
     inline DenseMatrix<__Tp>() : DenseMatrix<__Tp>(0, 0) {}
     DenseMatrix<__Tp>(std::size_t _lineNum, std::size_t _columnNum, __Tp _initValue = __Tp()) : __lineNum(_lineNum), __columnNum(_columnNum), __lineCapacity(proper_line_capacity_of(_columnNum)), __capacity(__lineNum * __lineCapacity), __basePtr((__Tp *)operator new(__capacity, ALIGN_CACHE_LINE)) {
         // initialize
+#pragma omp parallel for
         for(auto lineIndex = std::size_t(0); lineIndex < __lineNum; lineIndex++) {
             for(auto columnIndex = std::size_t(0); columnIndex < __columnNum; columnIndex++) {
                 (*this)[lineIndex][columnIndex] = _initValue;
