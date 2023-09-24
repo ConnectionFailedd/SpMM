@@ -5,6 +5,7 @@ include(CTest)
 enable_testing()
 
 add_executable(SPMM main.cpp)
+add_executable(TESTCASE_GEN testcase_gen.cpp)
 
 include_directories(include)
 

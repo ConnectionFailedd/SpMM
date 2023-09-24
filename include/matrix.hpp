@@ -59,51 +59,71 @@ public:
 
 private:
     std::size_t __lineNum, __columnNum;
-    std::size_t __lineCapacity, __capacity;
+    std::size_t __lineCapacity, __capacity; // unit: byte
     __Tp * __basePtr;
 
 private:
+    // unit: byte
     static std::size_t proper_line_capacity_of(std::size_t _columnNum) noexcept {
         auto lineCapacity = std::size_t(1);
         while(true) {
-            if(lineCapacity >= _columnNum) return lineCapacity;
-            if(lineCapacity == int(ALIGN_CACHE_LINE)) return (_columnNum / lineCapacity + 1) * lineCapacity;
+            if(lineCapacity >= _columnNum * sizeof(__Tp)) return lineCapacity;
+            if(lineCapacity == std::size_t(ALIGN_CACHE_LINE)) return (_columnNum * sizeof(__Tp) / lineCapacity + 1) * lineCapacity;
             lineCapacity <<= 1;
         }
     }
 
 public:
     inline DenseMatrix<__Tp>() : DenseMatrix<__Tp>(0, 0) {}
-    inline DenseMatrix<__Tp>(std::size_t _lineNum, std::size_t _columnNum) : __lineNum(_lineNum), __columnNum(_columnNum), __lineCapacity(proper_line_capacity_of(_columnNum)), __capacity(__lineNum * __lineCapacity), __basePtr(new(ALIGN_CACHE_LINE) __Tp[__capacity]()) {}
-    DenseMatrix<__Tp>(std::size_t _lineNum, std::size_t _columnNum, std::initializer_list<std::initializer_list<__Tp>> && _il) : __lineNum(_lineNum), __columnNum(_columnNum), __lineCapacity(proper_line_capacity_of(_columnNum)), __capacity(__lineNum * __lineCapacity) {
-        __basePtr = new(ALIGN_CACHE_LINE) __Tp[__capacity]();
-
+    DenseMatrix<__Tp>(std::size_t _lineNum, std::size_t _columnNum, __Tp _initValue = __Tp()) : __lineNum(_lineNum), __columnNum(_columnNum), __lineCapacity(proper_line_capacity_of(_columnNum)), __capacity(__lineNum * __lineCapacity), __basePtr((__Tp *)operator new(__capacity, ALIGN_CACHE_LINE)) {
+        // initialize
+        for(auto lineIndex = std::size_t(0); lineIndex < __lineNum; lineIndex++) {
+            for(auto columnIndex = std::size_t(0); columnIndex < __columnNum; columnIndex++) {
+                (*this)[lineIndex][columnIndex] = _initValue;
+            }
+        }
+    }
+    DenseMatrix<__Tp>(std::size_t _lineNum, std::size_t _columnNum, std::initializer_list<std::initializer_list<__Tp>> && _il) : DenseMatrix<__Tp>(_lineNum, _columnNum) {
         auto lineIndex = std::size_t(0);
         auto lineIter = _il.begin();
 
-        // if the shape of initializer doesn't fit the matrix, we cut off the waste part and complete the short lines with zeros
+        // if the shape of initializer doesn't fit the matrix, we cut off the waste part and complete the short lines with __Tp()
         while(lineIndex < __lineNum && lineIter != _il.end()) {
             auto columnIndex = std::size_t(0);
             auto columnIter = lineIter->begin();
 
             while(columnIndex < __columnNum && columnIter != lineIter->end()) {
-                __basePtr[lineIndex * __lineCapacity + columnIndex] = *columnIter;
+                (*this)[lineIndex][columnIndex] = *columnIter;
 
                 columnIndex++;
                 columnIter++;
             }
 
+            while(columnIndex < __columnNum) {
+                (*this)[lineIndex][columnIndex] = __Tp();
+
+                columnIndex++;
+            }
+
             lineIndex++;
             lineIter++;
         }
+
+        while(lineIndex < __lineNum) {
+            for(auto columnIndex = std::size_t(0); columnIndex < __columnNum; columnIndex++) {
+                (*this)[lineIndex][columnIndex] = __Tp();
+            }
+
+            lineIndex++;
+        }
     }
-    inline DenseMatrix<__Tp>(DenseMatrix<__Tp> && _src) noexcept : __lineNum(_src.__lineNum), __columnNum(_src.__columnNum), __capacity(_src.__capacity), __basePtr(_src.__basePtr) {
+    inline DenseMatrix<__Tp>(DenseMatrix<__Tp> && _src) noexcept : __lineNum(_src.__lineNum), __columnNum(_src.__columnNum), __lineCapacity(_src.__lineCapacity), __capacity(_src.__capacity), __basePtr(_src.__basePtr) {
         _src.__basePtr = nullptr;
     }
 
     inline ~DenseMatrix<__Tp>() {
         if(__basePtr != nullptr) {
-            delete[] __basePtr;
+            delete __basePtr;
             __basePtr = nullptr;
         }
     }
@@ -118,19 +138,19 @@ public:
 
         // if original capacity is smaller than needed, re-allocate memory
         if(__lineNum * __lineCapacity > __capacity) {
-            delete[] __basePtr;
+            delete __basePtr;
             __capacity = __lineNum * __lineCapacity;
-            __basePtr = new(ALIGN_CACHE_LINE) __Tp[__capacity]();
+            __basePtr = operator new(__capacity, ALIGN_CACHE_LINE);
         }
     }
 
     inline ConstLine operator[](std::size_t _index) const {
         if(_index >= __lineNum) throw std::out_of_range("Subscription of matrix out of range.");
-        return ConstLine(__columnNum, __basePtr + _index * __lineCapacity);
+        return ConstLine(__columnNum, (__Tp *)((char *)__basePtr + _index * __lineCapacity));
     }
     inline Line operator[](std::size_t _index) {
         if(_index >= __lineNum) throw std::out_of_range("Subscription of matrix out of range.");
-        return Line(__columnNum, __basePtr + _index * __lineCapacity);
+        return Line(__columnNum, (__Tp *)((char *)__basePtr + _index * __lineCapacity));
     }
 };
 
@@ -146,7 +166,7 @@ public:
         typename std::vector<std::size_t>::const_iterator __columnIndexBegin, __columnIndexEnd;
 
     public:
-        inline static const __Tp DEFAULT_VALUE = __Tp();
+        inline static const __Tp ZERO = __Tp(0);
 
     public:
         ConstLine(std::size_t _size, const typename std::vector<__Tp>::const_iterator & _valueBegin, const typename std::vector<std::size_t>::const_iterator & _columnIndexBegin, const typename std::vector<std::size_t>::const_iterator & _columnIndexEnd) noexcept : __size(_size), __valueBegin(_valueBegin), __columnIndexBegin(_columnIndexBegin), __columnIndexEnd(_columnIndexEnd) {}
@@ -159,7 +179,7 @@ public:
                     return *(__valueBegin + (iter - __columnIndexBegin));
                 }
             }
-            return DEFAULT_VALUE;
+            return ZERO;
         }
     };
 
@@ -245,7 +265,7 @@ public:
         if(this->__columnNum != rhsLineNum)
             throw std::invalid_argument("Invalid matrix multiplication.");
 
-        auto res = DenseMatrix<__Tp>(this->__lineNum, rhsColumnNum);
+        auto res = DenseMatrix<__Tp>(this->__lineNum, rhsColumnNum, 0);
         for(auto lhsLineIndex = 0; lhsLineIndex < this->__lineNum && lhsLineIndex < this->__linePtrs.size() - 1; lhsLineIndex++) {
             // traverse lines of CSR matrix
             auto lhsLineBeginPtr = this->__linePtrs[lhsLineIndex];
@@ -340,7 +360,7 @@ std::ifstream & operator>>(std::ifstream & _ifs, CSRMatrix<__Tp> & _csrMatrix) {
 
 /* ------------------------------------------------------------------------------------------------------------------------ */
 
-#if defined(DEBUG) && DEBUG == true
+#if DEBUG == true
 
 // output to stdout for debugging
 
