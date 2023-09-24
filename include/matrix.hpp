@@ -275,11 +275,14 @@ public:
         auto rhsSize = _rhs.size();
         auto rhsLineNum = rhsSize.first;
         auto rhsColumnNum = rhsSize.second;
-        if(this->__columnNum != rhsLineNum)
-            throw std::invalid_argument("Invalid matrix multiplication.");
+        if(this->__columnNum != rhsLineNum) throw std::invalid_argument("Invalid matrix multiplication.");
 
         auto res = DenseMatrix<__Tp>(this->__lineNum, rhsColumnNum, 0);
-        for(auto lhsLineIndex = 0; lhsLineIndex < this->__lineNum && lhsLineIndex < this->__linePtrs.size() - 1; lhsLineIndex++) {
+
+#pragma omp parallel for
+        for(auto lhsLineIndex = 0; lhsLineIndex < this->__lineNum; lhsLineIndex++) {
+            if(lhsLineIndex >= this->__linePtrs.size() - 1) continue;
+
             // traverse lines of CSR matrix
             auto lhsLineBeginPtr = this->__linePtrs[lhsLineIndex];
             auto lhsLineEndPtr = this->__linePtrs[lhsLineIndex + 1];
@@ -296,6 +299,7 @@ public:
                 }
             }
         }
+
         return res;
     }
 };
@@ -303,7 +307,7 @@ public:
 /* ------------------------------------------------------------------------------------------------------------------------ */
 
 template<class __Tp>
-std::ifstream & operator>>(std::ifstream & _ifs, DenseMatrix<__Tp> & _denseMatrix) { // load from file
+std::ifstream & operator>>(std::ifstream & _ifs, DenseMatrix<__Tp> & _denseMatrix) {
     // load from file
     auto bufferSize = sizeof(std::size_t) > sizeof(__Tp) ? sizeof(std::size_t) : sizeof(__Tp);
     alignas(std::max_align_t) char buffer[bufferSize];
@@ -362,9 +366,9 @@ std::ifstream & operator>>(std::ifstream & _ifs, CSRMatrix<__Tp> & _csrMatrix) {
         _ifs.read(buffer, sizeof(__Tp));
         auto value = *(__Tp *)buffer;
         _ifs.read(buffer, sizeof(std::size_t));
-        auto lineIndex = *(__Tp *)buffer;
+        auto lineIndex = *(std::size_t *)buffer;
         _ifs.read(buffer, sizeof(std::size_t));
-        auto columnIndex = *(__Tp *)buffer;
+        auto columnIndex = *(std::size_t *)buffer;
         _csrMatrix.push_back({value, lineIndex, columnIndex});
     }
 

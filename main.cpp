@@ -4,10 +4,12 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <omp.h>
 #include <string>
 
 int main(int argc, char ** argv) {
     auto testcaseNum = std::size_t(128);
+    omp_set_num_threads(8);
 
     // parse arguments
     if(argc == 1) {
