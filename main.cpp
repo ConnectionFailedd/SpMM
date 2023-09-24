@@ -26,6 +26,7 @@ int main(int argc, char ** argv) {
         }
     }
 
+    // my_res
     auto csr = CSRMatrix<double>();
     auto dense = DenseMatrix<double>();
     auto res = DenseMatrix<double>();
@@ -46,6 +47,11 @@ int main(int argc, char ** argv) {
         auto end = std::chrono::high_resolution_clock::now();
         timeRecorder << std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() << std::endl;
 
-        std::ofstream("testcases/my_res/res" + std::to_string(index), std::ios::out | std::ios::binary) << res; 
+        std::ofstream("testcases/my_res/res" + std::to_string(index), std::ios::out | std::ios::binary) << res;
     }
+    timeRecorder.close();
+
+    // mkl_res
+
+    // tvm_res
 }
