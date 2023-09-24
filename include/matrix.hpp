@@ -66,8 +66,8 @@ private:
     static std::size_t proper_line_capacity_of(std::size_t _columnNum) noexcept {
         auto lineCapacity = std::size_t(1);
         while(true) {
-            if(lineCapacity >= _columnNum * sizeof(__Tp)) return lineCapacity;
-            if(lineCapacity == int(ALIGN_CACHE_LINE)) return (_columnNum * sizeof(__Tp) / lineCapacity + 1) * lineCapacity;
+            if(lineCapacity >= _columnNum) return lineCapacity;
+            if(lineCapacity == int(ALIGN_CACHE_LINE)) return (_columnNum / lineCapacity + 1) * lineCapacity;
             lineCapacity <<= 1;
         }
     }
@@ -246,7 +246,7 @@ public:
             throw std::invalid_argument("Invalid matrix multiplication.");
 
         auto res = DenseMatrix<__Tp>(this->__lineNum, rhsColumnNum);
-        for(auto lhsLineIndex = 0; lhsLineIndex < this->__lineNum; lhsLineIndex++) {
+        for(auto lhsLineIndex = 0; lhsLineIndex < this->__lineNum && lhsLineIndex < this->__linePtrs.size() - 1; lhsLineIndex++) {
             // traverse lines of CSR matrix
             auto lhsLineBeginPtr = this->__linePtrs[lhsLineIndex];
             auto lhsLineEndPtr = this->__linePtrs[lhsLineIndex + 1];
@@ -270,7 +270,7 @@ public:
 /* ------------------------------------------------------------------------------------------------------------------------ */
 
 template<class __Tp>
-std::ifstream & operator>>(std::ifstream & _ifs, DenseMatrix<__Tp> & _denseMatrix) {    // load from file
+std::ifstream & operator>>(std::ifstream & _ifs, DenseMatrix<__Tp> & _denseMatrix) { // load from file
     // load from file
     auto bufferSize = sizeof(std::size_t) > sizeof(__Tp) ? sizeof(std::size_t) : sizeof(__Tp);
     alignas(std::max_align_t) char buffer[bufferSize];
@@ -291,7 +291,7 @@ std::ifstream & operator>>(std::ifstream & _ifs, DenseMatrix<__Tp> & _denseMatri
 }
 
 template<class __Tp>
-std::ofstream & operator<<(std::ofstream & _ofs, DenseMatrix<__Tp> & _denseMatrix) {
+std::ofstream & operator<<(std::ofstream & _ofs, const DenseMatrix<__Tp> & _denseMatrix) {
     auto bufferSize = sizeof(std::size_t) > sizeof(__Tp) ? sizeof(std::size_t) : sizeof(__Tp);
     alignas(std::max_align_t) char buffer[bufferSize];
 
@@ -315,12 +315,32 @@ template<class __Tp>
 std::ifstream & operator>>(std::ifstream & _ifs, CSRMatrix<__Tp> & _csrMatrix) {
     auto bufferSize = sizeof(std::size_t) > sizeof(__Tp) ? sizeof(std::size_t) : sizeof(__Tp);
     alignas(std::max_align_t) char buffer[bufferSize];
+
+    _ifs.read(buffer, sizeof(std::size_t));
+    auto lineNum = *(std::size_t *)buffer;
+    _ifs.read(buffer, sizeof(std::size_t));
+    auto columnNum = *(std::size_t *)buffer;
+    _csrMatrix.resize(lineNum, columnNum);
+
+    _ifs.read(buffer, sizeof(std::size_t));
+    auto cooEntryNum = *(std::size_t *)buffer;
+
+    for(auto index = 0; index < cooEntryNum; index++) {
+        _ifs.read(buffer, sizeof(__Tp));
+        auto value = *(__Tp *)buffer;
+        _ifs.read(buffer, sizeof(std::size_t));
+        auto lineIndex = *(__Tp *)buffer;
+        _ifs.read(buffer, sizeof(std::size_t));
+        auto columnIndex = *(__Tp *)buffer;
+        _csrMatrix.push_back({value, lineIndex, columnIndex});
+    }
+
     return _ifs;
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------ */
 
-#ifdef DEBUG
+#if defined(DEBUG) && DEBUG == true
 
 // output to stdout for debugging
 

@@ -38,5 +38,5 @@ if __name__ == '__main__':
         coo.sort(key = lambda x: x[1])
         for entry in coo:
             ofile.write(entry[0].to_bytes(4, byteorder='little'))
-            ofile.write(entry[1].to_bytes(4, byteorder='little'))
-            ofile.write(entry[2].to_bytes(4, byteorder='little'))
+            ofile.write(entry[1].to_bytes(8, byteorder='little'))
+            ofile.write(entry[2].to_bytes(8, byteorder='little'))
