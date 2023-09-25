@@ -9,15 +9,19 @@
 
 int main(int argc, char ** argv) {
     auto testcaseNum = std::size_t(128);
-    omp_set_num_threads(2);
+    auto threadsNum = 1;
 
     // parse arguments
     if(argc == 1) {
-        std::cout << "Executing with default arguments:   -N " << testcaseNum << std::endl;
+        std::cout << "Executing with default arguments:   -N " << testcaseNum << " -t " << threadsNum << std::endl;
     }
     for(auto index = std::size_t(1); index < argc; index++) {
         if(argv[index] == std::string("-N") || argv[index] == std::string("--number")) {
             testcaseNum = std::stoul(argv[index + 1]);
+            index++;
+        }
+        if(argv[index] == std::string("-t") || argv[index] == std::string("--threads")) {
+            threadsNum = std::stoi(argv[index + 1]);
             index++;
         }
         else {
@@ -25,8 +29,11 @@ int main(int argc, char ** argv) {
             std::cout << "Usage: SPMM [-N <testcase-number>]" << std::endl;
             std::cout << "Arguments:" << std::endl;
             std::cout << "    -N, --number        the number of testcases for testing." << std::endl;
+            std::cout << "    -t, --threads       the number of threads." << std::endl;
         }
     }
+
+    omp_set_num_threads(threadsNum);
 
     // my_res
     auto csr = CSRMatrix<double>();
@@ -34,7 +41,7 @@ int main(int argc, char ** argv) {
     auto res = DenseMatrix<double>();
 
     system("mkdir -p testcases/my_res");
-    auto timeRecorder = std::ofstream("testcases/my_res/__time", std::ios::out | std::ios::trunc);
+    auto timeRecorder = std::ofstream("testcases/my_res/_time" + std::to_string(threadsNum), std::ios::out | std::ios::trunc);
     for(auto index = 0; index < testcaseNum; index++) {
         std::ifstream("testcases/sparse/sparse" + std::to_string(index), std::ios::in | std::ios::binary) >> csr;
         std::ifstream("testcases/dense/dense" + std::to_string(index), std::ios::in | std::ios::binary) >> dense;
