@@ -84,6 +84,11 @@ public:
             }
         }
     }
+    inline DenseMatrix<__Tp>(DenseMatrix<__Tp> && _src) noexcept : __lineNum(_src.__lineNum), __columnNum(_src.__columnNum), __lineCapacity(_src.__lineCapacity), __capacity(_src.__capacity), __basePtr(_src.__basePtr) {
+        _src.__basePtr = nullptr;
+    }
+
+#if DEBUG == true
     DenseMatrix<__Tp>(std::size_t _lineNum, std::size_t _columnNum, std::initializer_list<std::initializer_list<__Tp>> && _il) : DenseMatrix<__Tp>(_lineNum, _columnNum) {
         auto lineIndex = std::size_t(0);
         auto lineIter = _il.begin();
@@ -118,9 +123,7 @@ public:
             lineIndex++;
         }
     }
-    inline DenseMatrix<__Tp>(DenseMatrix<__Tp> && _src) noexcept : __lineNum(_src.__lineNum), __columnNum(_src.__columnNum), __lineCapacity(_src.__lineCapacity), __capacity(_src.__capacity), __basePtr(_src.__basePtr) {
-        _src.__basePtr = nullptr;
-    }
+#endif
 
     inline ~DenseMatrix<__Tp>() {
         if(__basePtr != nullptr) {
@@ -205,6 +208,8 @@ private:
 public:
     inline CSRMatrix<__Tp>() : CSRMatrix<__Tp>(0, 0) {}
     inline CSRMatrix<__Tp>(std::size_t _lineNum, std::size_t _columnNum) : __lineNum(_lineNum), __columnNum(_columnNum), __values(), __columnIndexes(), __linePtrs(std::vector<std::size_t>(2, 0)) {}
+
+#if DEBUG == true
     CSRMatrix<__Tp>(std::size_t _lineNum, std::size_t _columnNum, std::initializer_list<std::tuple<__Tp, std::size_t, std::size_t>> && _il) : __lineNum(_lineNum), __columnNum(_columnNum), __values(), __columnIndexes(), __linePtrs(std::vector<std::size_t>(2, 0)) {
         // initializer list is COO matrix
         auto entries = std::vector<std::tuple<__Tp, std::size_t, std::size_t>>(std::move(_il));
@@ -224,6 +229,7 @@ public:
             }
         }
     }
+#endif
 
     inline std::pair<std::size_t, std::size_t> size() const noexcept {
         return {__lineNum, __columnNum};
@@ -280,7 +286,7 @@ public:
 
         auto res = DenseMatrix<__Tp>(this->__lineNum, rhsColumnNum, 0);
 
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic, 1)
         for(auto lhsLineIndex = 0; lhsLineIndex < this->__lineNum; lhsLineIndex++) {
             if(lhsLineIndex >= this->__linePtrs.size() - 1) continue;
 
