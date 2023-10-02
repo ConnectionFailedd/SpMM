@@ -26,12 +26,15 @@ int main(int argc, char ** argv) {
         }
         else if(argv[index] == std::string("-m")) {
             m = std::stoul(argv[index + 1]);
+            index++;
         }
         else if(argv[index] == std::string("-n")) {
             n = std::stoul(argv[index + 1]);
+            index++;
         }
         else if(argv[index] == std::string("-p")) {
             p = std::stoul(argv[index + 1]);
+            index++;
         }
         else {
             std::cout << "Sparse-dense matrix multiplication." << std::endl;
