@@ -46,7 +46,7 @@ int main(int argc, char ** argv) {
             return 0;
         }
     }
-    std::cout << "Executing with default arguments:   -M " << measureTime << " -t " << threadNum << " -m " << m << " -n " << n << " -p " << p << std::endl;
+    std::cout << "Executing with arguments:   -M " << measureTime << " -t " << threadNum << " -m " << m << " -n " << n << " -p " << p << std::endl;
 
     omp_set_num_threads(threadNum);
 

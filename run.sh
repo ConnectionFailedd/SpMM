@@ -10,9 +10,10 @@ cd ..
 ./build/TESTCASE_GEN -m 256 -n 256 -p 256 -d 0.005
 ./build/TESTCASE_GEN -m 512 -n 512 -p 512 -d 0.002
 ./build/TESTCASE_GEN -m 1024 -n 1024 -p 1024 -d 0.001
-./build/SPMM -t 1
-./build/SPMM -t 2
-./build/SPMM -t 4
-./build/SPMM -t 8
-./build/SPMM -t 12
-./build/SPMM -t 15
+for size in 16 32 64 128 256 512 1024
+do
+    for threads in 1 2 4 8
+    do
+        ./build/SPMM -t $threads -m $size -n $size -p $size;
+    done
+done
