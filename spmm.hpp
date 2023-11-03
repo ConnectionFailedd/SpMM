@@ -5,7 +5,7 @@
 #include <mkl_types.h>
 
 void spmm_csr_dense(MKL_INT m, MKL_INT n, MKL_INT p,
-                    const double * csrValues, const MKL_INT * csrColumnIndices, const MKL_INT * csrRowPointers,
+                    const MKL_INT * csrRowPointers, const MKL_INT * csrColumnIndices, const double * csrValues,
                     const double * denseMatrix,
                     double * resultMatrix);
 
