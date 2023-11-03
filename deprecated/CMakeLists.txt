@@ -4,7 +4,8 @@ project(SPMM VERSION 0.1.0 LANGUAGES C CXX)
 include(CTest)
 enable_testing()
 
-add_executable(SPMM main.cpp spmm.cpp)
+add_executable(TESTCASE_GEN testcase_gen.cpp)
+add_executable(SPMM main.cpp)
 
 include_directories(include)
 
