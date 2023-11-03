@@ -148,6 +148,10 @@ public:
         }
     }
 
+    inline __Tp * matrix() noexcept {
+        return __basePtr;
+    }
+
     inline ConstLine operator[](std::size_t _index) const {
         if(_index >= __lineNum) throw std::out_of_range("Subscription of matrix out of range.");
         return ConstLine(__columnNum, (__Tp *)((char *)__basePtr + _index * __lineCapacity));
@@ -202,15 +206,15 @@ public:
 private:
     std::size_t __lineNum, __columnNum;
     std::vector<__Tp> __values;
-    std::vector<std::size_t> __columnIndexes;
+    std::vector<std::size_t> __columnIndices;
     std::vector<std::size_t> __linePtrs;
 
 public:
     inline CSRMatrix<__Tp>() : CSRMatrix<__Tp>(0, 0) {}
-    inline CSRMatrix<__Tp>(std::size_t _lineNum, std::size_t _columnNum) : __lineNum(_lineNum), __columnNum(_columnNum), __values(), __columnIndexes(), __linePtrs(std::vector<std::size_t>(2, 0)) {}
+    inline CSRMatrix<__Tp>(std::size_t _lineNum, std::size_t _columnNum) : __lineNum(_lineNum), __columnNum(_columnNum), __values(), __columnIndices(), __linePtrs(std::vector<std::size_t>(2, 0)) {}
 
 #if DEBUG == true
-    CSRMatrix<__Tp>(std::size_t _lineNum, std::size_t _columnNum, std::initializer_list<std::tuple<__Tp, std::size_t, std::size_t>> && _il) : __lineNum(_lineNum), __columnNum(_columnNum), __values(), __columnIndexes(), __linePtrs(std::vector<std::size_t>(2, 0)) {
+    CSRMatrix<__Tp>(std::size_t _lineNum, std::size_t _columnNum, std::initializer_list<std::tuple<__Tp, std::size_t, std::size_t>> && _il) : __lineNum(_lineNum), __columnNum(_columnNum), __values(), __columnIndices(), __linePtrs(std::vector<std::size_t>(2, 0)) {
         // initializer list is COO matrix
         auto entries = std::vector<std::tuple<__Tp, std::size_t, std::size_t>>(std::move(_il));
 
@@ -234,12 +238,29 @@ public:
     inline std::pair<std::size_t, std::size_t> size() const noexcept {
         return {__lineNum, __columnNum};
     }
+
+    inline typename std::vector<__Tp>::iterator begin() noexcept {
+        return __values.begin();
+    }
+
+    inline typename std::vector<__Tp>::iterator end() noexcept {
+        return __values.end();
+    }
+
+    inline const std::vector<std::size_t> & column_indices() const noexcept {
+        return __columnIndices;
+    }
+
+    inline const std::vector<std::size_t> & line_pointers() const noexcept {
+        return __linePtrs;
+    }
+
     inline void resize(std::size_t _lineNum, std::size_t _columnNum) {
         // resize and clear all
         __lineNum = _lineNum;
         __columnNum = _columnNum;
         __values.clear();
-        __columnIndexes.clear();
+        __columnIndices.clear();
         __linePtrs = std::vector<std::size_t>(2, 0);
     }
 
@@ -260,7 +281,7 @@ public:
         }
 
         __values.push_back(value);
-        __columnIndexes.push_back(columnIndex);
+        __columnIndices.push_back(columnIndex);
         __linePtrs.back()++;
     }
 
@@ -268,10 +289,10 @@ public:
         if(_index >= __lineNum) throw std::out_of_range("Subscription of matrix out of range.");
 
         auto currentLineIndex = __linePtrs.size() - 2;
-        if(_index > currentLineIndex) return ConstLine(__columnNum, __values.end(), __columnIndexes.end(), __columnIndexes.end());
+        if(_index > currentLineIndex) return ConstLine(__columnNum, __values.end(), __columnIndices.end(), __columnIndices.end());
 
         auto valueBegin = __values.begin() + __linePtrs[_index];
-        auto columnIndexBegin = __columnIndexes.begin() + __linePtrs[_index], columnIndexEnd = __columnIndexes.begin() + __linePtrs[_index + 1];
+        auto columnIndexBegin = __columnIndices.begin() + __linePtrs[_index], columnIndexEnd = __columnIndices.begin() + __linePtrs[_index + 1];
         return ConstLine(__columnNum, valueBegin, columnIndexBegin, columnIndexEnd);
     }
 
@@ -296,7 +317,7 @@ public:
 
             for(auto lhsLinePtr = lhsLineBeginPtr; lhsLinePtr < lhsLineEndPtr; lhsLinePtr++) {
                 // CSR entries in lines
-                auto lhsColumnIndex = this->__columnIndexes[lhsLinePtr];
+                auto lhsColumnIndex = this->__columnIndices[lhsLinePtr];
                 auto lhsValue = this->__values[lhsLinePtr];
 
                 for(auto rhsColumnIndex = 0; rhsColumnIndex < rhsColumnNum; rhsColumnIndex++) {
