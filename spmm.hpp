@@ -7,6 +7,7 @@
 void spmm_csr_dense(MKL_INT m, MKL_INT n, MKL_INT p,
                     const MKL_INT * csrRowPointers, const MKL_INT * csrColumnIndices, const double * csrValues,
                     const double * denseMatrix,
-                    double * resultMatrix);
+                    double * resultMatrix,
+                    double alpha, double beta);
 
 #endif

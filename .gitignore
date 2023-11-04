@@ -2,3 +2,7 @@ build
 .cache
 .vscode
 testcases
+log
+results
+time_reports
+deprecated
