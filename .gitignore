@@ -6,3 +6,4 @@ log
 results
 time_reports
 deprecated
+__pycache__

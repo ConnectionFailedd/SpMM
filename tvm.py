@@ -1,5 +1,4 @@
 import tvm
-from tvm import relay
 import numpy as np
 import argparse
 
@@ -11,9 +10,6 @@ parser.add_argument("-p", type=int, default=1024, help="Columns of dense matrix.
 parser.add_argument("--density", type=float, default=0.01, help="Density of CSR matrix.")
 
 args = parser.parse_args()
-
-os.system('mkdir -p testcases')
-generate_test_data(args.m, args.n, args.p, args.density, f'testcases/csr_{args.m}x{args.n}_{args.density}', f'testcases/dense_{args.n}x{args.p}_{args.density}')
 
 # 创建稠密矩阵输入
 m = 1024  # 稠密矩阵行数
